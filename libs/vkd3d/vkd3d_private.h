@@ -3362,6 +3362,8 @@ struct d3d12_command_list
     bool is_valid;
     bool debug_capture;
     bool has_replaced_shaders;
+    /* Set once the list has reported losing its allocator mid-recording. */
+    bool reported_allocator_loss;
 
     struct vkd3d_index_buffer index_buffer;
     struct vkd3d_dgc_batch dgc_batch;
@@ -3428,6 +3430,12 @@ struct d3d12_command_list
 
     struct d3d12_command_allocator *allocator;
     struct d3d12_command_allocator *submit_allocator;
+    /* With retain_recording_allocators, an allocator whose last public reference
+     * was released while this list recorded from it. Owns exactly one internal
+     * reference, dropped by d3d12_command_list_release_retained_allocator().
+     * Like the rest of the list, it relies on the application's external
+     * synchronization: D3D12 does not allow a list to be used from two threads. */
+    struct d3d12_command_allocator *retained_recording_allocator;
     struct d3d12_device *device;
 
     VkBuffer so_buffers[D3D12_SO_BUFFER_SLOT_COUNT];
